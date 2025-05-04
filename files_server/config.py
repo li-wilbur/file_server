@@ -1,10 +1,15 @@
 import os
 
+import sys
+
 class Config:
     """基础配置类"""
     SECRET_KEY = 'your-secret-key-here'
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
+    try:
+        UPLOAD_FOLDER = sys.argv[1]
+    except:
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+        UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
     
     # 支持预览的文件类型
     PREVIEW_EXTENSIONS = {
