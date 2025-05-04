@@ -1,10 +1,11 @@
 import os
-from flask import Flask, render_template, request, send_file, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, send_file, redirect, url_for, flash, jsonify, send_from_directory
 from werkzeug.utils import secure_filename
 import mimetypes
 import urllib.parse
 import time
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+from datetime import datetime
 
 from .config import config
 from .utils import get_file_type, safe_filename, get_file_info
@@ -43,113 +44,62 @@ def create_app(config_name='default'):
     # 路由定义
     @app.route('/')
     def index():
-        """显示主页和文件列表"""
-        try:
-            files = [get_file_info(filename, app.config['UPLOAD_FOLDER']) 
-                    for filename in os.listdir(app.config['UPLOAD_FOLDER'])]
-            return render_template('index.html', files=files)
-        except Exception as e:
-            return render_template('index.html', files=[])
+        return render_template('index.html')
+
+    @app.route('/api/files')
+    def get_files():
+        files = []
+        for filename in os.listdir(app.config['UPLOAD_FOLDER']):
+            if os.path.isfile(os.path.join(app.config['UPLOAD_FOLDER'], filename)):
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file_stat = os.stat(file_path)
+                files.append({
+                    'name': filename,
+                    'size': file_stat.st_size,
+                    'uploadTime': datetime.fromtimestamp(file_stat.st_mtime).isoformat(),
+                    'type': mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+                })
+        return jsonify(files)
 
     @app.route('/upload', methods=['POST'])
     def upload_file():
-        """处理文件上传"""
         if 'file' not in request.files:
-            FILE_OPERATIONS.labels(operation='upload', status='error').inc()
-            flash('没有选择文件')
-            return redirect(url_for('index'))
+            return jsonify({'error': '没有文件被上传'}), 400
         
         file = request.files['file']
         if file.filename == '':
-            FILE_OPERATIONS.labels(operation='upload', status='error').inc()
-            flash('没有选择文件')
-            return redirect(url_for('index'))
+            return jsonify({'error': '没有选择文件'}), 400
         
-        try:
-            filename = safe_filename(file.filename)
+        if file:
+            filename = secure_filename(file.filename)
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            
-            if os.path.exists(file_path):
-                FILE_OPERATIONS.labels(operation='upload', status='error').inc()
-                flash(f'文件 "{filename}" 已存在，请重命名后上传')
-                return redirect(url_for('index'))
-            
             file.save(file_path)
-            file_size = os.path.getsize(file_path)
-            FILE_SIZE.labels(operation='upload').observe(file_size)
-            FILE_OPERATIONS.labels(operation='upload', status='success').inc()
-            flash('文件上传成功！')
-        except Exception as e:
-            FILE_OPERATIONS.labels(operation='upload', status='error').inc()
-            flash('文件上传失败，请重试')
-        
-        return redirect(url_for('index'))
+            return jsonify({'message': '文件上传成功', 'filename': filename})
 
     @app.route('/download/<filename>')
     def download_file(filename):
-        """处理文件下载"""
-        try:
-            decoded_filename = urllib.parse.unquote(filename)
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], decoded_filename)
-            file_size = os.path.getsize(file_path)
-            FILE_SIZE.labels(operation='download').observe(file_size)
-            FILE_OPERATIONS.labels(operation='download', status='success').inc()
-            return send_file(
-                file_path,
-                as_attachment=True,
-                download_name=decoded_filename
-            )
-        except Exception as e:
-            FILE_OPERATIONS.labels(operation='download', status='error').inc()
-            flash('文件下载失败')
-            return redirect(url_for('index'))
+        return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
 
-    @app.route('/delete/<filename>')
+    @app.route('/delete/<filename>', methods=['DELETE'])
     def delete_file(filename):
-        """处理单个文件删除"""
         try:
-            decoded_filename = urllib.parse.unquote(filename)
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], decoded_filename)
-            file_size = os.path.getsize(file_path)
-            FILE_SIZE.labels(operation='delete').observe(file_size)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             os.remove(file_path)
-            FILE_OPERATIONS.labels(operation='delete', status='success').inc()
-            flash('文件删除成功！')
+            return jsonify({'message': '文件删除成功'})
         except Exception as e:
-            FILE_OPERATIONS.labels(operation='delete', status='error').inc()
-            flash('文件删除失败')
-        return redirect(url_for('index'))
+            return jsonify({'error': str(e)}), 500
 
     @app.route('/delete-multiple', methods=['POST'])
-    def delete_multiple():
-        """处理多个文件删除"""
+    def delete_multiple_files():
         try:
             filenames = request.json.get('filenames', [])
-            success_count = 0
-            
             for filename in filenames:
-                try:
-                    decoded_filename = urllib.parse.unquote(filename)
-                    file_path = os.path.join(app.config['UPLOAD_FOLDER'], decoded_filename)
-                    file_size = os.path.getsize(file_path)
-                    FILE_SIZE.labels(operation='delete_multiple').observe(file_size)
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                if os.path.exists(file_path):
                     os.remove(file_path)
-                    success_count += 1
-                except Exception:
-                    continue
-            
-            if success_count == len(filenames):
-                FILE_OPERATIONS.labels(operation='delete_multiple', status='success').inc()
-                return jsonify({'status': 'success', 'message': f'成功删除 {success_count} 个文件'})
-            elif success_count > 0:
-                FILE_OPERATIONS.labels(operation='delete_multiple', status='partial').inc()
-                return jsonify({'status': 'partial', 'message': f'成功删除 {success_count} 个文件，部分文件删除失败'})
-            else:
-                FILE_OPERATIONS.labels(operation='delete_multiple', status='error').inc()
-                return jsonify({'status': 'error', 'message': '文件删除失败'})
-        except Exception:
-            FILE_OPERATIONS.labels(operation='delete_multiple', status='error').inc()
-            return jsonify({'status': 'error', 'message': '删除操作失败'})
+            return jsonify({'message': '文件删除成功'})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
 
     @app.route('/preview/<filename>')
     def preview_file(filename):
