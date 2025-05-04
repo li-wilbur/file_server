@@ -260,53 +260,93 @@
         }
 
         .file-actions {
-            display: flex;
-            gap: 0.5rem;
+            margin-top: auto;
+            padding-top: 1rem;
         }
 
-        .btn-preview {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-            color: white;
-        }
-
-        .btn-preview:hover {
-            background-color: var(--hover-color);
-            border-color: var(--hover-color);
-            color: white;
-        }
-
-        .sort-controls {
-            background-color: white;
-            padding: 1rem;
-            border-radius: 10px;
-            margin-bottom: 1rem;
-            box-shadow: var(--card-shadow);
+        /* 列表视图样式 */
+        .view-controls {
             display: flex;
             align-items: center;
             gap: 1rem;
         }
 
-        .sort-controls select {
-            border: 1px solid #dee2e6;
+        .view-controls .btn-group {
+            background-color: white;
             border-radius: 5px;
-            padding: 0.375rem 0.75rem;
-            font-size: 0.9rem;
-            color: #495057;
-            background-color: #fff;
-            transition: border-color 0.15s ease-in-out;
+            padding: 0.25rem;
+            box-shadow: var(--card-shadow);
         }
 
-        .sort-controls select:focus {
-            border-color: var(--primary-color);
-            outline: 0;
-            box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
+        .view-controls .btn {
+            padding: 0.375rem 0.75rem;
+            border: none;
+            background: none;
+            color: #6c757d;
+        }
+
+        .view-controls .btn.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 4px;
+        }
+
+        .file-list.list-view {
+            display: block;
+        }
+
+        .file-list.list-view .file-card {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+        }
+
+        .file-list.list-view .file-card .card-body {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            flex: 1;
+            padding: 0.5rem 1rem;
+        }
+
+        .file-list.list-view .file-info {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .file-list.list-view .file-actions {
+            margin-top: 0;
+            padding-top: 0;
+            margin-left: auto;
+        }
+
+        .file-list.list-view .file-checkbox {
+            position: static;
+            margin-right: 1rem;
+        }
+
+        .file-list.list-view .file-name {
+            min-width: 200px;
+        }
+
+        .file-list.list-view .file-size {
+            min-width: 100px;
+            text-align: right;
+        }
+
+        .file-list.list-view .file-date {
+            min-width: 150px;
+            text-align: right;
         }
 
         .file-list {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
             margin-top: 1rem;
         }
 
@@ -314,21 +354,122 @@
             display: flex;
             flex-direction: column;
             height: 100%;
+            background: white;
+            border: none;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .file-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
         }
 
         .file-card .card-body {
-            flex: 1;
+            padding: 1.5rem;
             display: flex;
             flex-direction: column;
+            gap: 1rem;
         }
 
-        .file-info {
+        .file-card .file-info {
             flex: 1;
         }
 
-        .file-actions {
-            margin-top: auto;
-            padding-top: 1rem;
+        .file-card .card-title {
+            font-size: 1.1rem;
+            margin-bottom: 0.75rem;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .file-card .file-icon {
+            font-size: 1.4rem;
+            color: var(--primary-color);
+        }
+
+        .file-card .file-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .file-card .file-size,
+        .file-card .file-date {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .file-card .file-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .file-card .btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1rem;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .file-card .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .file-card .btn-primary:hover {
+            background-color: var(--hover-color);
+            transform: translateY(-2px);
+        }
+
+        .file-card .btn-danger {
+            background-color: #fff;
+            border-color: var(--danger-color);
+            color: var(--danger-color);
+        }
+
+        .file-card .btn-danger:hover {
+            background-color: var(--danger-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .file-card .file-checkbox {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: all 0.2s ease;
+            z-index: 2;
+        }
+
+        .file-card .file-checkbox:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .file-card.selected {
+            border: 2px solid var(--primary-color);
+            background-color: rgba(74, 144, 226, 0.02);
         }
     </style>
 </head>
@@ -340,16 +481,28 @@
     </div>
 
     <div class="container">
-        <div class="sort-controls">
-            <label for="sortBy" class="mb-0">排序方式：</label>
-            <select id="sortBy" class="form-select" onchange="sortFiles()">
-                <option value="name_asc">名称 (A-Z)</option>
-                <option value="name_desc">名称 (Z-A)</option>
-                <option value="date_desc">最新上传</option>
-                <option value="date_asc">最早上传</option>
-                <option value="size_desc">大小 (从大到小)</option>
-                <option value="size_asc">大小 (从小到大)</option>
-            </select>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="sort-controls">
+                <label for="sortBy" class="mb-0">排序方式：</label>
+                <select id="sortBy" class="form-select" onchange="sortFiles()">
+                    <option value="name_asc">名称 (A-Z)</option>
+                    <option value="name_desc">名称 (Z-A)</option>
+                    <option value="date_desc">最新上传</option>
+                    <option value="date_asc">最早上传</option>
+                    <option value="size_desc">大小 (从大到小)</option>
+                    <option value="size_asc">大小 (从小到大)</option>
+                </select>
+            </div>
+            <div class="view-controls">
+                <div class="btn-group">
+                    <button class="btn active" onclick="switchView('grid')" data-view="grid">
+                        <i class="bi bi-grid-3x3-gap"></i>
+                    </button>
+                    <button class="btn" onclick="switchView('list')" data-view="list">
+                        <i class="bi bi-list"></i>
+                    </button>
+                </div>
+            </div>
         </div>
 
         <div class="row">
@@ -402,6 +555,12 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadFiles();
             setupDragAndDrop();
+            // 恢复上次的视图模式
+            const savedView = localStorage.getItem('preferredView') || 'grid';
+            switchView(savedView);
+            // 恢复上次的排序方式
+            const savedSort = localStorage.getItem('preferredSort') || 'date_desc';
+            document.getElementById('sortBy').value = savedSort;
         });
 
         // 加载文件列表
@@ -752,6 +911,9 @@
             });
 
             files.forEach(file => fileList.appendChild(file));
+            
+            // 保存排序偏好到 localStorage
+            localStorage.setItem('preferredSort', sortBy);
         }
 
         function createFileCard(file) {
@@ -771,24 +933,28 @@
                     <div class="file-info">
                         <h5 class="card-title">
                             <i class="bi bi-file-earmark file-icon"></i>
-                            ${file.name}
+                            <span class="text-truncate">${file.name}</span>
                         </h5>
-                        <p class="file-size mb-2">
-                            <i class="bi bi-hdd"></i> ${fileSize}
-                        </p>
-                        <p class="text-muted small mb-2">
-                            <i class="bi bi-clock"></i> ${uploadTime}
-                        </p>
+                        <div class="file-meta">
+                            <p class="file-size mb-0">
+                                <i class="bi bi-hdd"></i>
+                                <span>${fileSize}</span>
+                            </p>
+                            <p class="file-date mb-0">
+                                <i class="bi bi-clock"></i>
+                                <span>${uploadTime}</span>
+                            </p>
+                        </div>
                     </div>
                     <div class="file-actions">
-                        <div class="d-flex gap-2">
-                            <a href="/download/${file.name}" class="btn btn-primary btn-sm flex-grow-1">
-                                <i class="bi bi-download"></i> 下载
-                            </a>
-                            <button class="btn btn-danger btn-sm" onclick="deleteFile('${file.name}')">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
+                        <a href="/download/${file.name}" class="btn btn-primary">
+                            <i class="bi bi-download"></i>
+                            <span>下载</span>
+                        </a>
+                        <button class="btn btn-danger" onclick="deleteFile('${file.name}')">
+                            <i class="bi bi-trash"></i>
+                            <span>删除</span>
+                        </button>
                     </div>
                 </div>
                 <input type="checkbox" class="file-checkbox" onchange="updateSelectedFiles()">
@@ -803,6 +969,24 @@
             const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function switchView(view) {
+            const fileList = document.getElementById('fileList');
+            const buttons = document.querySelectorAll('.view-controls .btn');
+            
+            buttons.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.view === view);
+            });
+
+            if (view === 'list') {
+                fileList.classList.add('list-view');
+            } else {
+                fileList.classList.remove('list-view');
+            }
+
+            // 保存视图偏好到 localStorage
+            localStorage.setItem('preferredView', view);
         }
     </script>
 </body>
