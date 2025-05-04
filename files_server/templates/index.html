@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件服务器</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --hover-color: #357abd;
+            --danger-color: #dc3545;
+            --success-color: #28a745;
+            --bg-color: #f8f9fa;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition-speed: 0.3s;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--hover-color));
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .file-card {
+            transition: all var(--transition-speed);
+            border: none;
+            box-shadow: var(--card-shadow);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .file-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            background-color: white;
+            box-shadow: var(--card-shadow);
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary-color);
+            background-color: rgba(74, 144, 226, 0.05);
+        }
+
+        .upload-area i {
+            color: var(--primary-color);
+            transition: transform var(--transition-speed);
+        }
+
+        .upload-area:hover i {
+            transform: scale(1.1);
+        }
+
+        .file-checkbox {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: all var(--transition-speed);
+        }
+
+        .file-checkbox:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .select-all-container {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background-color: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: var(--card-shadow);
+        }
+
+        .select-all-container label {
+            margin-bottom: 0;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .file-card.selected {
+            border: 2px solid var(--primary-color);
+            background-color: rgba(74, 144, 226, 0.05);
+        }
+
+        .delete-button {
+            min-width: 150px;
+            transition: all var(--transition-speed);
+        }
+
+        .delete-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(220, 53, 69, 0.2);
+        }
+
+        .btn {
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            transition: all var(--transition-speed);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--hover-color);
+            border-color: var(--hover-color);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            border-color: var(--danger-color);
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+            border-color: #bd2130;
+        }
+
+        .alert {
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .card-title {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .text-muted {
+            color: #6c757d !important;
+        }
+
+        .file-icon {
+            font-size: 1.2rem;
+            margin-right: 0.5rem;
+            color: var(--primary-color);
+        }
+
+        .file-size {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: #dee2e6;
+            margin-bottom: 1rem;
+        }
+
+        /* 预览模态框样式 */
+        .preview-modal .modal-content {
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .preview-modal .modal-header {
+            background-color: var(--primary-color);
+            color: white;
+            border-bottom: none;
+        }
+
+        .preview-modal .modal-body {
+            padding: 0;
+            max-height: 80vh;
+            overflow: auto;
+        }
+
+        .preview-modal .modal-footer {
+            border-top: none;
+            padding: 1rem;
+        }
+
+        .preview-image {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .preview-text {
+            padding: 1rem;
+            font-family: monospace;
+            white-space: pre-wrap;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            margin: 1rem;
+        }
+
+        .preview-unsupported {
+            padding: 2rem;
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .preview-unsupported i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .preview-loading {
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .preview-loading .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-preview {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-preview:hover {
+            background-color: var(--hover-color);
+            border-color: var(--hover-color);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <div class="container">
+            <h1 class="text-center mb-0">文件服务器</h1>
+        </div>
+    </div>
+
+    <div class="container py-4">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="row justify-content-center mb-5">
+            <div class="col-md-8">
+                <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                    <i class="bi bi-cloud-upload fs-1"></i>
+                    <h4 class="mt-3">点击或拖拽文件到此处上传</h4>
+                    <p class="text-muted">支持任意类型的文件</p>
+                </div>
+                <form id="uploadForm" action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data" class="d-none">
+                    <input type="file" id="fileInput" name="file" onchange="this.form.submit()">
+                </form>
+            </div>
+        </div>
+
+        {% if files %}
+        <div class="select-all-container">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                <label class="form-check-label" for="selectAll">
+                    全选
+                </label>
+            </div>
+            <span class="text-muted">已选择 <span id="selectedCount">0</span> 个文件</span>
+            <button class="btn btn-danger ms-auto delete-button" onclick="deleteSelected()" style="display: none;" id="deleteSelectedBtn">
+                <i class="bi bi-trash"></i> 删除选中文件
+            </button>
+        </div>
+        {% endif %}
+
+        <div class="row">
+            {% if files %}
+                {% for file in files %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card file-card h-100 position-relative">
+                            <div class="file-checkbox">
+                                <input type="checkbox" class="form-check-input file-select" 
+                                       data-filename="{{ file.encoded_name }}" onchange="updateSelectedCount(this)">
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title text-truncate" title="{{ file.name }}">
+                                    <i class="bi {{ file.icon }} file-icon"></i> 
+                                    <span class="filename">{{ file.name }}</span>
+                                </h5>
+                                <p class="card-text file-size">
+                                    <i class="bi bi-hdd"></i> {{ file.size }}
+                                </p>
+                                <div class="d-flex justify-content-between">
+                                    <div class="file-actions">
+                                        <button class="btn btn-preview" onclick="previewFile('{{ file.encoded_name }}', '{{ file.type }}')">
+                                            <i class="bi bi-eye"></i> 预览
+                                        </button>
+                                        <a href="{{ url_for('download_file', filename=file.encoded_name) }}" class="btn btn-primary">
+                                            <i class="bi bi-download"></i> 下载
+                                        </a>
+                                    </div>
+                                    <a href="{{ url_for('delete_file', filename=file.encoded_name) }}" class="btn btn-danger" 
+                                       onclick="return confirm('确定要删除这个文件吗？')">
+                                        <i class="bi bi-trash"></i> 删除
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <div class="empty-state">
+                        <i class="bi bi-folder"></i>
+                        <h4>暂无文件</h4>
+                        <p class="text-muted">点击上方区域上传文件</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 预览模态框 -->
+    <div class="modal fade preview-modal" id="previewModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">文件预览</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="previewContent"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function updateSelectedCount(checkbox) {
+            const card = checkbox.closest('.file-card');
+            if (checkbox.checked) {
+                card.classList.add('selected');
+            } else {
+                card.classList.remove('selected');
+            }
+            
+            const checkboxes = document.querySelectorAll('.file-select:checked');
+            const count = checkboxes.length;
+            document.getElementById('selectedCount').textContent = count;
+            
+            const deleteBtn = document.getElementById('deleteSelectedBtn');
+            if (deleteBtn) {
+                deleteBtn.style.display = count > 0 ? 'block' : 'none';
+            }
+            
+            const totalCheckboxes = document.querySelectorAll('.file-select');
+            document.getElementById('selectAll').checked = count === totalCheckboxes.length;
+        }
+
+        function toggleSelectAll() {
+            const selectAllCheckbox = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.file-select');
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+                const card = checkbox.closest('.file-card');
+                if (selectAllCheckbox.checked) {
+                    card.classList.add('selected');
+                } else {
+                    card.classList.remove('selected');
+                }
+            });
+            
+            const count = selectAllCheckbox.checked ? checkboxes.length : 0;
+            document.getElementById('selectedCount').textContent = count;
+            
+            const deleteBtn = document.getElementById('deleteSelectedBtn');
+            if (deleteBtn) {
+                deleteBtn.style.display = count > 0 ? 'block' : 'none';
+            }
+        }
+
+        function deleteSelected() {
+            const selectedFiles = Array.from(document.querySelectorAll('.file-select:checked'))
+                .map(checkbox => checkbox.dataset.filename);
+            
+            if (selectedFiles.length === 0) return;
+            
+            if (!confirm(`确定要删除选中的 ${selectedFiles.length} 个文件吗？`)) return;
+
+            fetch('/delete-multiple', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ filenames: selectedFiles })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                if (data.status === 'success' || data.status === 'partial') {
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                alert('删除操作失败');
+            });
+        }
+
+        // 预览模态框实例
+        let previewModal;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            previewModal = new bootstrap.Modal(document.getElementById('previewModal'));
+        });
+
+        function previewFile(filename, fileType) {
+            const previewContent = document.getElementById('previewContent');
+            previewContent.innerHTML = `
+                <div class="preview-loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">加载中...</span>
+                    </div>
+                    <p class="mt-2">正在加载预览...</p>
+                </div>
+            `;
+            
+            previewModal.show();
+
+            if (fileType === 'image') {
+                // 图片直接使用URL预览
+                const imageUrl = `/preview/${filename}`;
+                const img = new Image();
+                img.onload = function() {
+                    previewContent.innerHTML = `<img src="${imageUrl}" class="preview-image" alt="${filename}">`;
+                };
+                img.onerror = function() {
+                    handleImageError();
+                };
+                img.src = imageUrl;
+            } else {
+                // 其他类型文件使用fetch获取内容
+                fetch(`/preview/${filename}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log("预览数据:", data); // 添加调试日志
+                        
+                        const fileName = data.name || filename;
+                        
+                        switch(data.type) {
+                            case 'text':
+                                previewContent.innerHTML = `
+                                    <div class="preview-text">
+                                        <div class="text-muted mb-2">
+                                            <div>文件名: ${fileName}</div>
+                                            <div>编码: ${data.encoding || '未知'}</div>
+                                        </div>
+                                        <pre>${data.content}</pre>
+                                    </div>`;
+                                break;
+                                
+                            case 'empty':
+                                previewContent.innerHTML = `
+                                    <div class="preview-unsupported">
+                                        <i class="bi bi-file-earmark"></i>
+                                        <h5>空文件</h5>
+                                        <p class="text-muted">文件名: ${fileName}</p>
+                                        <p class="text-muted">${data.message}</p>
+                                        <p class="text-muted small">文件大小: ${data.size || 0} 字节</p>
+                                    </div>`;
+                                break;
+                                
+                            case 'error':
+                                previewContent.innerHTML = `
+                                    <div class="preview-unsupported">
+                                        <i class="bi bi-exclamation-circle"></i>
+                                        <h5>预览失败</h5>
+                                        <p class="text-muted">文件名: ${fileName}</p>
+                                        <p class="text-muted">${data.message}</p>
+                                    </div>`;
+                                break;
+                                
+                            case 'other':
+                                previewContent.innerHTML = `
+                                    <div class="preview-unsupported">
+                                        <i class="bi bi-file-earmark"></i>
+                                        <h5>${data.message || '该文件类型不支持预览'}</h5>
+                                        <p class="text-muted">文件名: ${fileName}</p>
+                                        <p class="text-muted">文件大小: ${data.size || 0} 字节</p>
+                                        <p class="text-muted">请下载后查看文件内容</p>
+                                    </div>`;
+                                break;
+                                
+                            default:
+                                previewContent.innerHTML = `
+                                    <div class="preview-unsupported">
+                                        <i class="bi bi-question-circle"></i>
+                                        <h5>未知文件类型</h5>
+                                        <p class="text-muted">文件名: ${fileName}</p>
+                                        <p class="text-muted">无法预览此文件</p>
+                                    </div>`;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Preview error:', error);
+                        previewContent.innerHTML = `
+                            <div class="preview-unsupported">
+                                <i class="bi bi-exclamation-circle"></i>
+                                <h5>预览失败</h5>
+                                <p class="text-muted">文件名: ${filename}</p>
+                                <p class="text-muted">${error.message || '无法加载文件预览'}</p>
+                            </div>`;
+                    });
+            }
+        }
+
+        function handleImageError() {
+            const previewContent = document.getElementById('previewContent');
+            previewContent.innerHTML = `
+                <div class="preview-unsupported">
+                    <i class="bi bi-exclamation-circle"></i>
+                    <h5>图片加载失败</h5>
+                    <p class="text-muted">无法预览该图片，请检查文件是否完整</p>
+                    <p class="text-muted small">如果问题持续存在，请尝试下载后查看</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html> 
