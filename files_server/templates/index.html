@@ -585,6 +585,9 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // 预览模态框实例
+        let previewModal;
+
         // 页面加载完成后获取文件列表
         document.addEventListener('DOMContentLoaded', () => {
             loadFiles();
@@ -595,6 +598,8 @@
             // 恢复上次的排序方式
             const savedSort = localStorage.getItem('preferredSort') || 'date_desc';
             document.getElementById('sortBy').value = savedSort;
+            // 初始化预览模态框
+            previewModal = new bootstrap.Modal(document.getElementById('previewModal'));
         });
 
         // 加载文件列表
@@ -813,7 +818,10 @@
             
             previewModal.show();
 
-            if (fileType === 'image') {
+            // 检查文件类型
+            const isImage = fileType && fileType.startsWith('image/');
+            
+            if (isImage) {
                 // 图片直接使用URL预览
                 const imageUrl = `/preview/${filename}`;
                 const img = new Image();
@@ -834,8 +842,6 @@
                         return response.json();
                     })
                     .then(data => {
-                        console.log("预览数据:", data); // 添加调试日志
-                        
                         const fileName = data.name || filename;
                         
                         switch(data.type) {
